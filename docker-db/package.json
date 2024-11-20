@@ -1,0 +1,12 @@
+{
+  "name": "mysql-docker-demo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "docker-compose up -d",
+    "stop": "docker-compose down"
+  },
+  "dependencies": {
+    "mysql-docker-demo": "file:"
+  }
+}
