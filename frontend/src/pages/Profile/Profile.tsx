@@ -1,34 +1,54 @@
-import { useAuth0, User } from '@auth0/auth0-react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { useAuth0 } from '@auth0/auth0-react';
 
 const Profile = () => {
-  const { user, isAuthenticated, isLoading } = useAuth0<User>();
+  const { user, isAuthenticated, getAccessTokenSilently } = useAuth0();
+  const [userMetadata, setUserMetadata] = useState(null);
 
-  const navigate = useNavigate();
-
-  const goBack = () => {
-    navigate(-1);
-  };
-
-  if (isLoading) {
-    return <div>Loading ...</div>;
-  }
+  useEffect(() => {
+    const getUserMetadata = async () => {
+      const domain = "movlan.us.auth0.com";
+  
+      try {
+        const accessToken = await getAccessTokenSilently({
+          authorizationParams: {
+            audience: `https://${domain}/api/v2/`,
+            scope: "read:current_user",
+          },
+        });
+  
+        const userDetailsByIdUrl = `https://${domain}/api/v2/users/${user.sub}`;
+  
+        const metadataResponse = await fetch(userDetailsByIdUrl, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+  
+        const { user_metadata } = await metadataResponse.json();
+  
+        setUserMetadata(user_metadata);
+      } catch (e) {
+        console.log(e.message);
+      }
+    };
+  
+    getUserMetadata();
+  }, [getAccessTokenSilently, user?.sub]);
 
   return (
     isAuthenticated &&
     user && (
-      <div className="flex flex-col gap-4 justify-center items-center h-screen">
-        <img className="w-24 h-24 rounded-full" src={user.picture} alt={user.name} />
-        <h2 className="text-2xl font-bold">{user.name}</h2>
-        <p className="text-lg">{user.email}</p>
-        <button
-          className="flex gap-2 items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white rounded-md border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          onClick={goBack}
-        >
-          <ArrowLeft />
-          Go Back
-        </button>
+      <div className="flex flex-col justify-center items-center h-screen">
+        <img src={user.picture} alt={user.name} />
+        <h2>{user.name}</h2>
+        <p>{user.email}</p>
+        <h3>User Metadata</h3>
+        {userMetadata ? (
+          <pre>{JSON.stringify(userMetadata, null, 2)}</pre>
+        ) : (
+          'No user metadata defined'
+        )}
       </div>
     )
   );

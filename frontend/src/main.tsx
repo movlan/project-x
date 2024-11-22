@@ -37,6 +37,8 @@ createRoot(document.getElementById('root')!).render(
       clientId="25QARK1xlfGgiqh9pNouuDH2xz737tlM"
       authorizationParams={{
         redirect_uri: window.location.origin,
+        audience: 'https://blog.bahram.dev',
+        scope: 'read:users',
       }}
     >
       <RouterProvider router={router} />
