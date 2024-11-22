@@ -2,11 +2,12 @@ import { Router } from 'express';
 import { db } from '../db/index.js';
 import { users } from '../db/schema.js';
 import { eq } from 'drizzle-orm';
+import { requiredScopes } from 'express-oauth2-jwt-bearer';
 
 const router = Router();
 
 // Create user
-router.post('/', async (req, res) => {
+router.post('/', requiredScopes('write:users'), async (req, res) => {
   try {
     const user = await db.insert(users).values(req.body);
     res.status(201).json(user);
@@ -16,7 +17,7 @@ router.post('/', async (req, res) => {
 });
 
 // Get all users
-router.get('/', async (req, res) => {
+router.get('/', requiredScopes('read:users'), async (req, res) => {
   try {
     const allUsers = await db.select().from(users);
     res.json(allUsers);
@@ -26,7 +27,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get user by id
-router.get('/:id', async (req, res) => {
+router.get('/:id', requiredScopes('read:users'), async (req, res) => {
   try {
     const user = await db.select().from(users).where(eq(users.id, req.params.id));
     if (!user.length) return res.status(404).json({ error: 'User not found' });
@@ -37,7 +38,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Update user
-router.put('/:id', async (req, res) => {
+router.put('/:id', requiredScopes('write:users'), async (req, res) => {
   try {
     await db.update(users).set(req.body).where(eq(users.id, req.params.id));
     res.json({ message: 'User updated successfully' });
